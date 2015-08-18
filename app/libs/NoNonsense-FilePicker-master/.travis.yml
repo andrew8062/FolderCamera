@@ -1,0 +1,27 @@
+# This allows it to run on faster containers
+sudo: false
+
+language: android
+env:
+  matrix:
+    - ANDROID_SDKS=android-22,sysimg-21 ANDROID_TARGET=android-22 ANDROID_ABI=armeabi-v7a
+android:
+  components:
+    - platform-tools
+    - build-tools-22.0.1
+    - android-22
+    - sys-img-armeabi-v7a-android-21
+    - extra-android-support
+    - extra-google-m2repository
+    - extra-android-m2repository
+cache:
+   directories:
+   - $HOME/.gradle/caches/
+
+before_install:
+  - chmod +x gradlew
+#  - echo no | android create avd --force -n test -t $ANDROID_TARGET --abi $ANDROID_ABI
+#  - emulator -avd test -no-skin -no-audio -no-window &
+
+script:
+  - ./gradlew clean build check

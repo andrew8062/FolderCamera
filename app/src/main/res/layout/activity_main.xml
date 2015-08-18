@@ -16,20 +16,40 @@
 
     <Button
         android:id="@+id/button1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="75dp"
+        android:layout_height="75dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:text="拍照"></Button>
+        android:background="@drawable/take_picture_button"
+        android:layout_marginBottom="40dp"></Button>
 
+
+    <FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/frameLayout">
+
+        <at.markushi.ui.CircleButton
+            android:layout_width="64dip"
+            android:layout_height="64dip"
+            android:id="@+id/float_button"
+            android:layout_marginTop="30dp"
+            android:src="@mipmap/fab_add"
+            app:cb_color="#99CC00"
+            app:cb_pressedRingWidth="8dip"
+            android:layout_gravity="left|top" />
+
+    </FrameLayout>
 
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="250dp"
         android:layout_height="250dp"
-        android:layout_above="@+id/button1"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true" />
+        android:layout_below="@+id/frameLayout"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
     <!--<com.github.clans.fab.FloatingActionMenu-->
     <!--android:id="@+id/menu"-->
@@ -47,22 +67,6 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/button1"
         android:layout_centerHorizontal="true" />
-
-    <FrameLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" >
-
-        <at.markushi.ui.CircleButton
-            android:layout_width="64dip"
-            android:layout_height="64dip"
-            android:id="@+id/float_button"
-            android:src="@mipmap/ic_action_tick"
-            app:cb_color="#99CC00"
-            app:cb_pressedRingWidth="8dip" />
-
-    </FrameLayout>
 
 
 </RelativeLayout>

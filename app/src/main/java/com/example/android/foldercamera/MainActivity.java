@@ -1,85 +1,84 @@
 package com.example.android.foldercamera;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
-import android.graphics.PixelFormat;
+import android.graphics.Matrix;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
-import android.util.FloatMath;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ZoomControls;
 
-import com.github.clans.fab.FloatingActionButton;
-import com.github.clans.fab.FloatingActionMenu;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import com.google.common.collect.Lists;
+
 import java.io.IOException;
-import java.sql.Time;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
+
+import at.markushi.ui.CircleButton;
 
 
 public class MainActivity extends Activity implements SurfaceHolder.Callback {
     private static final String TAG = "fc";
+    public static final String SHARED_PREFERENCE_KEY = "shared_preference";
+    public static final int ORIENTAION_CHANGE = 1;
     private Camera camera;
     private Camera.Parameters parameters;
-    SurfaceView surfaceView;
-    SurfaceHolder surfaceHolder;
-    Button button1;
-    ImageView imageView1;
-    FloatingActionMenu fam;
-    FloatingActionButton fab;
-    private GestureDetector gestureDetector;
+    private SurfaceView surfaceView;
+    private SurfaceHolder surfaceHolder;
+    private Button take_picture_button;
+    private ImageView imageView1;
+    private int orientation = -1;
+    CustomDialog customDialog;
+    OrientationChangeDetector orientationChangeDetector;
+    PictureSave pictureSave;
     int currentZoomLevel;
     double finger_distance = 0;
-    private Button folderFloatingButton;
+    private CircleButton fam;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        findViewById(R.id.float_button).setOnClickListener(famOnClickListener);
+        fam = (CircleButton) findViewById(R.id.float_button);
+        fam.setOnClickListener(famOnClickListener);
         //gestureDetector = new GestureDetector(this);
 
 
-
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-
-
-        button1 = (Button)
-
-                findViewById(R.id.button1);
+        take_picture_button = (Button) findViewById(R.id.button1);
+        take_picture_button.setTag(0);
+        orientationChangeDetector = new OrientationChangeDetector(this, mHandler);
+        pictureSave = new PictureSave();
+        customDialog = new CustomDialog(MainActivity.this, pictureSave);
+        customDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                setImmersiveMode();
+            }
+        });
 
         //在AndroidManifest.xml中設定或是用下面的setRequestedOrientation(0)設定也可以
         //0代表橫向、1代表縱向
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         //設為横向顯示。因為攝影頭會自動翻轉90度，所以如果不横向顯示，看到的畫面就是翻轉的。
 
         surfaceView = (SurfaceView)
@@ -93,18 +92,37 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         surfaceHolder.addCallback(this);
-        button1.setOnClickListener(new View.OnClickListener()
+        take_picture_button.setOnClickListener(new View.OnClickListener()
 
-                                   {
+                                               {
 
-                                       public void onClick(View v) {
+                                                   public void onClick(View v) {
 
-                                           //自動對焦
-                                           camera.autoFocus(afcb);
-                                       }
-                                   }
+                                                       //自動對焦
+                                                       camera.autoFocus(afcb);
+                                                   }
+                                               }
 
         );
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        setImmersiveMode();
+    }
+
+    private void setImmersiveMode() {
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
     }
 
@@ -115,8 +133,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
             currentZoomLevel = 0;
             zoomControls.setIsZoomInEnabled(true);
             zoomControls.setIsZoomOutEnabled(true);
-            Log.d(TAG, "smoothZoom:" + parameters.isSmoothZoomSupported());
-            Log.d(TAG, "maxZoom:" + maxZoomLevel);
             zoomControls.setOnZoomInClickListener(new View.OnClickListener() {
                                                       @Override
                                                       public void onClick(View v) {
@@ -158,6 +174,17 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
             camera.setParameters(parameter);
         }
     }
+
+    private double handleZoomGesture(MotionEvent event, double mDist) {
+        double newDist = getFingerSpacing(event);
+        if (newDist > mDist) {
+            zoomCamera(true);
+        } else if (newDist < mDist) {
+            zoomCamera(false);
+        }
+        return newDist;
+    }
+
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 
@@ -213,6 +240,20 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
         int action = event.getAction();
         Log.d(TAG, "pointer count: " + event.getPointerCount());
+        if (action == MotionEvent.ACTION_DOWN){
+            camera.cancelAutoFocus();
+            Rect focusRect = calculateTapArea(event.getX(), event.getY(), 1f);
+            Rect meteringRect = calculateTapArea(event.getX(), event.getY(), 1.5f);
+
+            parameters = camera.getParameters();
+            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+
+
+            parameters.setFocusAreas(Lists.newArrayList(new Camera.Area(meteringRect, 1000)));
+            camera.setParameters(parameters);
+            camera.autoFocus(afcb);
+
+        }
         if (event.getPointerCount() > 1) {
             if (action == MotionEvent.ACTION_POINTER_DOWN) {
                 finger_distance = getFingerSpacing(event);
@@ -220,113 +261,50 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
             } else if (action == MotionEvent.ACTION_MOVE && parameters.isZoomSupported()) {
                 Log.d(TAG, "motion event action_move");
                 camera.cancelAutoFocus();
-                finger_distance = handleZoom(event, finger_distance);
+                finger_distance = handleZoomGesture(event, finger_distance);
             }
-        } else {
-
-            if (action == MotionEvent.ACTION_UP) {
-                handleFocus(event);
-            }
-
         }
         return true;
-        //return gestureDetector.onTouchEvent(event);
     }
 
-//    private void handleFocus(MotionEvent event) {
-//        int pointerId = event.getPointerId(0);
-//        int pointerIndex = event.findPointerIndex(pointerId);
-//
-//        float x = event.getX(pointerIndex);
-//        float y = event.getY(pointerIndex);
-//
-//        Rect focusRect = calculateFocusArea(x, y);
-//        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-//
-//        Camera.Area focusArea = new Camera.Area(focusRect, 500);
-//        List<Camera.Area> focusAreas = new ArrayList<Camera.Area>();
-//        focusAreas.add(focusArea);
-//        parameters.setFocusAreas(focusAreas);
-//        camera.setParameters(parameters);
+    private Rect calculateTapArea (float x, float y, float cofficient){
+        int areaSize = Float.valueOf(210 * cofficient).intValue();
 
 
 
+        int left = clamp((int) x - areaSize / 2, 0, surfaceView.getWidth() - areaSize);
+        int top = clamp((int) y - areaSize / 2, 0, surfaceView.getHeight() - areaSize);
 
-
-//        List<String> supportedFocusMode = parameters.getSupportedFocusModes();
-//        if (supportedFocusMode != null && supportedFocusMode.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
-//            camera.autoFocus(new Camera.AutoFocusCallback() {
-//                @Override
-//                public void onAutoFocus(boolean success, Camera camera) {
-//                    camera.cancelAutoFocus();
-//                }
-//            });
-//        }
-
+        RectF rectF = new RectF(left, top, left+areaSize, top+areaSize);
+        Matrix matrix = new Matrix();
+        matrix.mapRect(rectF);
+        return new Rect(Math.round(rectF.left), Math.round(rectF.top), Math.round(rectF.right), Math.round(rectF.bottom));
     }
 
-//    private Rect calculateFocusArea(float x, float y){
-//        Rect touchRect = new Rect((int) (x - 100),
-//                (int) (y - 100),
-//                (int) (x + 100),
-//                (int) (y + 100));
-//
-//        Rect targetFocusRect = new Rect(
-//
-//                touchRect.left * 2000/surfaceView.getWidth() - 1000,
-//                touchRect.top * 2000/surfaceView.getHeight() - 1000,
-//                touchRect.right * 2000/surfaceView.getWidth() - 1000,
-//                touchRect.bottom * 2000/surfaceView.getHeight() - 1000);
-//        return targetFocusRect;
-//    }
-
+    private int clamp(int x, int min, int max){
+        if(x > max)
+            return max;
+        if(x < min)
+            return min;
+        return x;
+    }
+    //calculate the distance between two fingers
     private double getFingerSpacing(MotionEvent event) {
         float x = event.getX(0) - event.getX(1);
         float y = event.getY(0) - event.getY(1);
         return Math.sqrt(x * x + y * y);
     }
 
-    private double handleZoom(MotionEvent event, double mDist) {
-        double newDist = getFingerSpacing(event);
-        if (newDist > mDist) {
-            zoomCamera(true);
-        } else if (newDist < mDist) {
-            zoomCamera(false);
-        }
-        return newDist;
-    }
 
     PictureCallback jpeg = new PictureCallback() {
 
         public void onPictureTaken(byte[] data, Camera camera) {
-
-            Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-            //byte數组轉換成Bitmap
-            imageView1.setImageBitmap(bmp);
-            //拍下圖片顯示在下面的ImageView裡
-            FileOutputStream fop;
-            try {
-                fop = new FileOutputStream("/sdcard/dd.jpg");
-                //實例化FileOutputStream，參數是生成路徑
-                bmp.compress(Bitmap.CompressFormat.JPEG, 100, fop);
-                //壓缩bitmap寫進outputStream 參數：輸出格式  輸出質量  目標OutputStream
-                //格式可以為jpg,png,jpg不能存儲透明
-                fop.close();
-                System.out.println("拍照成功");
-                //關閉流
-            } catch (FileNotFoundException e) {
-
-                e.printStackTrace();
-                System.out.println("FileNotFoundException");
-
-            } catch (IOException e) {
-
-                e.printStackTrace();
-                System.out.println("IOException");
-            }
-            camera.startPreview();
+//            Bitmap bmp = pictureSave.save(data);
+//            imageView1.setImageBitmap(bmp);
             //需要手動重新startPreview，否則停在拍下的瞬間
+            pictureSave.save(data);
+            camera.startPreview();
+
         }
 
     };
@@ -345,101 +323,87 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         }
     };
 
+
     private View.OnClickListener famOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             Log.d(TAG, "famisclicked");
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(MainActivity.this);
-            dialogBuilder.setTitle("select folder");
-            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.select_dialog_singlechoice);
-            arrayAdapter.add("Hardik");
-            arrayAdapter.add("Archit");
-            arrayAdapter.add("Jignesh");
-            arrayAdapter.add("Umang");
-            arrayAdapter.add("Gatti");
+            //folderDialog.showDialog()
+            // //Here's the magic..
+            //Set the dialog to not focusable (makes navigation ignore us adding the window)
+            customDialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+            //Show the dialog!
+            customDialog.show();
+            //Set the dialog to immersive
+            customDialog.getWindow().getDecorView().setSystemUiVisibility(
+                    getWindow().getDecorView().getSystemUiVisibility());
+            //Clear the not focusable flag from the window
+            customDialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+            ;
+        }
 
-            dialogBuilder.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
-            dialogBuilder.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    String folderName = arrayAdapter.getItem(which);
-                    Toast.makeText(MainActivity.this, "you select " + folderName, Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "you select " + folderName);
-                }
-            });
-            dialogBuilder.show();
+
+    };
+
+    Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case ORIENTAION_CHANGE:
+                    int[] degrees = getButtonRotationDegree((int)take_picture_button.getTag(), msg.arg1);
+                    RotateAnimation rotateAnimation = new RotateAnimation(degrees[0], degrees[1], Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
+                            0.5f);
+                    rotateAnimation.setDuration(300);
+                    rotateAnimation.setFillAfter(true);
+//                    rotateAnimation.setFillEnabled(true);
+                    if (msg.arg1 == 0 && orientation != 0) {
+                        orientation = 0;
+                        take_picture_button.startAnimation(rotateAnimation);
+                        take_picture_button.setTag(orientation);
+                    } else if (msg.arg1 == 1 && orientation != 1) {
+                        orientation = 1;
+                        take_picture_button.startAnimation(rotateAnimation);
+                        take_picture_button.setTag(orientation);
+                    } else if (msg.arg1 == 2 && orientation != 2) {
+                        orientation = 2;
+                        take_picture_button.startAnimation(rotateAnimation);
+                        take_picture_button.setTag(orientation);
+                    }
+
+
+                    break;
+            }
         }
     };
 
-//    @Override
-//    public boolean onDown(MotionEvent e) {
-//        return false;
-//    }
-//
-//    @Override
-//    public void onShowPress(MotionEvent e) {
-//
-//    }
-//
-//    @Override
-//    public boolean onSingleTapUp(MotionEvent e) {
-//        return false;
-//    }
-//
-//    @Override
-//    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-//        return false;
-//    }
-//
-//    @Override
-//    public void onLongPress(MotionEvent e) {
-//
-//    }
-//
-//    private static final int SWIPE_MIN_DISTANCE = 120;
-//    private static final int SWIPE_MAX_OFF_PATH = 250;
-//    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
-//
-//    @Override
-//    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-//        Log.d(TAG, "onFling");
-//        Log.d(TAG, "Flags: " + e1.getEdgeFlags());
-//
-//        if (e1.getEdgeFlags() == MotionEvent.EDGE_LEFT) {
-//            // code to handle swipe from left edge
-//            Log.d(TAG, "Edge fling!");
-//        }
-//
-//        try {
-//            float distance = e1.getX() - e2.getX();
-//
-//            Log.d(TAG, "fling distance: "+distance+"velocity: "+velocityX);
-//            // do not do anything if the swipe does not reach a certain length
-//            // of distance
-//            if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
-//                return false;
-//
-//            // right to left swipe
-//            if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE
-//                    && Math.abs(velocityX) < SWIPE_THRESHOLD_VELOCITY) {
-//                Log.d(TAG, "right to left!");
-//
-//
-//            }
-//            // left to right swipe
-//            else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE
-//                    && Math.abs(velocityX) < SWIPE_THRESHOLD_VELOCITY) {
-//                Log.d(TAG, "left to right!");
-//
-//            }
-//        } catch (Exception e) {
-//            // nothing
-//        }
-//        return false;
-//    }
+    private int[] getButtonRotationDegree(int prev_orientation, int current_orientation){
+        int[] degrees = new int[2];
+        switch(prev_orientation){
+            case 0:
+                degrees[0] = 0;
+                break;
+            case 1:
+                degrees[0] = 90;
+                break;
+            case 2:
+                degrees[0] = -90;
+                break;
+        }
+        switch(current_orientation){
+            case 0:
+                degrees[1] = 0;
+                break;
+            case 1:
+                degrees[1] = 90;
+                break;
+            case 2:
+                degrees[1] = -90;
+                break;
+
+        }
+        return degrees;
+    }
+
 }
+
+
