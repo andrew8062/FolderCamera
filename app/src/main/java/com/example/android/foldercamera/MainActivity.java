@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -37,37 +38,134 @@ import at.markushi.ui.CircleButton;
 
 
 public class MainActivity extends Activity implements SurfaceHolder.Callback {
-    private static final String TAG = "fc";
     public static final String SHARED_PREFERENCE_KEY = "shared_preference";
     public static final int ORIENTAION_CHANGE = 1;
-    private Camera camera;
-    private Camera.Parameters parameters;
-    private SurfaceView surfaceView;
-    private SurfaceHolder surfaceHolder;
-    private Button take_picture_button;
-    private ImageView imageView1;
-    private int orientation = -1;
+    private static final String TAG = "fc";
     CustomDialog customDialog;
     OrientationChangeDetector orientationChangeDetector;
     PictureSave pictureSave;
     int currentZoomLevel;
     double finger_distance = 0;
+    PictureCallback jpeg = new PictureCallback() {
+
+        public void onPictureTaken(byte[] data, Camera camera) {
+//            Bitmap bmp = pictureSave.save(data);
+//            imageView1.setImageBitmap(bmp);
+            //需要手動重新startPreview，否則停在拍下的瞬間
+
+
+            pictureSave.save(data);
+            camera.startPreview();
+
+        }
+
+    };
+    Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+//            switch (msg.what) {
+//                case ORIENTAION_CHANGE:
+//                    int[] degrees = getButtonRotationDegree((int)take_picture_button.getTag(), msg.arg1);
+//                    RotateAnimation rotateAnimation = new RotateAnimation(degrees[0], degrees[1], Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
+//                            0.5f);
+//                    rotateAnimation.setDuration(300);
+//                    rotateAnimation.setFillAfter(true);
+////                    rotateAnimation.setFillEnabled(true);
+//                    if (msg.arg1 !=  orientation) {
+//                        orientation = msg.arg1;
+//                        take_picture_button.startAnimation(rotateAnimation);
+//                        take_picture_button.setTag(orientation);
+//                    }
+//                    break;
+//            }
+        }
+    };
+    private Camera camera;
+    private Camera.Parameters parameters;
+    private Camera.CameraInfo info;
+    //自動對焦監聽式
+    Camera.AutoFocusCallback afcb = new Camera.AutoFocusCallback() {
+
+        public void onAutoFocus(boolean success, Camera camera) {
+
+            if (success) {
+                //對焦成功才拍照
+                int orientation = orientationChangeDetector.getOrientation();
+                switch(orientation){
+                    case 0:
+                        orientation = 90;
+                        break;
+                    case 1:
+                        orientation = 0;
+                        break;
+                    case 2:
+                        orientation = 180;
+                        break;
+                }
+                Camera.Parameters params = camera.getParameters();
+                params.setRotation(orientation);
+                camera.setParameters(params);
+                camera.takePicture(null, null, jpeg);
+
+            }
+        }
+    };
+    private SurfaceView surfaceView;
+    private SurfaceHolder surfaceHolder;
+    private Button take_picture_button;
+    //image view for review
+    private ImageView imageView1;
+    private int orientation = -1;
     private CircleButton fam;
+    private View.OnClickListener famOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Log.d(TAG, "famisclicked");
+            //folderDialog.showDialog()
+            // //Here's the magic..
+            //Set the dialog to not focusable (makes navigation ignore us adding the window)
+            customDialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+            //Show the dialog!
+            customDialog.show();
+            //Set the dialog to immersive
+            customDialog.getWindow().getDecorView().setSystemUiVisibility(
+                    getWindow().getDecorView().getSystemUiVisibility());
+            //Clear the not focusable flag from the window
+            customDialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+            ;
+        }
+
+
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        camera = Camera.open();
         fam = (CircleButton) findViewById(R.id.float_button);
         fam.setOnClickListener(famOnClickListener);
-        //gestureDetector = new GestureDetector(this);
-
-
-        take_picture_button = (Button) findViewById(R.id.button1);
-        take_picture_button.setTag(0);
+        setPictureSize();
+        setup_custom_dialog();
+        setup_tack_picture_button();
         orientationChangeDetector = new OrientationChangeDetector(this, mHandler);
         pictureSave = new PictureSave();
+
+        surfaceView = (SurfaceView)
+                findViewById(R.id.surfaceView);
+
+        imageView1 = (ImageView)
+                findViewById(R.id.imageView1);
+
+        surfaceHolder = surfaceView.getHolder();
+        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        surfaceHolder.addCallback(this);
+
+
+    }
+
+    private void setup_custom_dialog(){
         customDialog = new CustomDialog(MainActivity.this, pictureSave);
         customDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
@@ -75,45 +173,28 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
                 setImmersiveMode();
             }
         });
-
-        //在AndroidManifest.xml中設定或是用下面的setRequestedOrientation(0)設定也可以
-        //0代表橫向、1代表縱向
-//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        //設為横向顯示。因為攝影頭會自動翻轉90度，所以如果不横向顯示，看到的畫面就是翻轉的。
-
-        surfaceView = (SurfaceView)
-
-                findViewById(R.id.surfaceView);
-
-        imageView1 = (ImageView)
-
-                findViewById(R.id.imageView1);
-
-        surfaceHolder = surfaceView.getHolder();
-        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        surfaceHolder.addCallback(this);
-        take_picture_button.setOnClickListener(new View.OnClickListener()
-
-                                               {
+    }
+    private void setup_tack_picture_button() {
+        take_picture_button = (Button) findViewById(R.id.button1);
+        take_picture_button.setTag(0);
+        take_picture_button.setOnClickListener(new View.OnClickListener() {
 
                                                    public void onClick(View v) {
-
                                                        //自動對焦
                                                        camera.autoFocus(afcb);
                                                    }
                                                }
 
         );
+    }
+    private void setPictureSize() {
+        parameters = camera.getParameters();
+        PictureSize pictureSave = new PictureSize(parameters);
+        Camera.Size size = pictureSave.getSize(0);
+        parameters.setPictureSize(size.width, size.height);
+        camera.setParameters(parameters);
 
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume");
-        setImmersiveMode();
-    }
-
     private void setImmersiveMode() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
@@ -125,6 +206,22 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        setImmersiveMode();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+        orientationChangeDetector.unregister();
+    }
+
+
 
     private void setupZoomControl() {
         ZoomControls zoomControls = (ZoomControls) findViewById(R.id.zoomControls);
@@ -185,15 +282,13 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         return newDist;
     }
 
-
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
 
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
 
-        camera = Camera.open();
+        //camera = Camera.open();
         parameters = camera.getParameters();
         try {
 
@@ -240,20 +335,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
         int action = event.getAction();
         Log.d(TAG, "pointer count: " + event.getPointerCount());
-        if (action == MotionEvent.ACTION_DOWN){
-            camera.cancelAutoFocus();
-            Rect focusRect = calculateTapArea(event.getX(), event.getY(), 1f);
-            Rect meteringRect = calculateTapArea(event.getX(), event.getY(), 1.5f);
-
-            parameters = camera.getParameters();
-            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-
-
-            parameters.setFocusAreas(Lists.newArrayList(new Camera.Area(meteringRect, 1000)));
-            camera.setParameters(parameters);
-            camera.autoFocus(afcb);
-
-        }
+//        if (action == MotionEvent.ACTION_DOWN) {
+//            camera.autoFocus(afcb);
+//        }
         if (event.getPointerCount() > 1) {
             if (action == MotionEvent.ACTION_POINTER_DOWN) {
                 finger_distance = getFingerSpacing(event);
@@ -267,27 +351,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         return true;
     }
 
-    private Rect calculateTapArea (float x, float y, float cofficient){
-        int areaSize = Float.valueOf(210 * cofficient).intValue();
-
-
-
-        int left = clamp((int) x - areaSize / 2, 0, surfaceView.getWidth() - areaSize);
-        int top = clamp((int) y - areaSize / 2, 0, surfaceView.getHeight() - areaSize);
-
-        RectF rectF = new RectF(left, top, left+areaSize, top+areaSize);
-        Matrix matrix = new Matrix();
-        matrix.mapRect(rectF);
-        return new Rect(Math.round(rectF.left), Math.round(rectF.top), Math.round(rectF.right), Math.round(rectF.bottom));
-    }
-
-    private int clamp(int x, int min, int max){
-        if(x > max)
-            return max;
-        if(x < min)
-            return min;
-        return x;
-    }
     //calculate the distance between two fingers
     private double getFingerSpacing(MotionEvent event) {
         float x = event.getX(0) - event.getX(1);
@@ -295,90 +358,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         return Math.sqrt(x * x + y * y);
     }
 
-
-    PictureCallback jpeg = new PictureCallback() {
-
-        public void onPictureTaken(byte[] data, Camera camera) {
-//            Bitmap bmp = pictureSave.save(data);
-//            imageView1.setImageBitmap(bmp);
-            //需要手動重新startPreview，否則停在拍下的瞬間
-            pictureSave.save(data);
-            camera.startPreview();
-
-        }
-
-    };
-
-
-    //自動對焦監聽式
-    Camera.AutoFocusCallback afcb = new Camera.AutoFocusCallback() {
-
-        public void onAutoFocus(boolean success, Camera camera) {
-
-            if (success) {
-                //對焦成功才拍照
-                camera.takePicture(null, null, jpeg);
-
-            }
-        }
-    };
-
-
-    private View.OnClickListener famOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            Log.d(TAG, "famisclicked");
-            //folderDialog.showDialog()
-            // //Here's the magic..
-            //Set the dialog to not focusable (makes navigation ignore us adding the window)
-            customDialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
-            //Show the dialog!
-            customDialog.show();
-            //Set the dialog to immersive
-            customDialog.getWindow().getDecorView().setSystemUiVisibility(
-                    getWindow().getDecorView().getSystemUiVisibility());
-            //Clear the not focusable flag from the window
-            customDialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
-            ;
-        }
-
-
-    };
-
-    Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case ORIENTAION_CHANGE:
-                    int[] degrees = getButtonRotationDegree((int)take_picture_button.getTag(), msg.arg1);
-                    RotateAnimation rotateAnimation = new RotateAnimation(degrees[0], degrees[1], Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
-                            0.5f);
-                    rotateAnimation.setDuration(300);
-                    rotateAnimation.setFillAfter(true);
-//                    rotateAnimation.setFillEnabled(true);
-                    if (msg.arg1 == 0 && orientation != 0) {
-                        orientation = 0;
-                        take_picture_button.startAnimation(rotateAnimation);
-                        take_picture_button.setTag(orientation);
-                    } else if (msg.arg1 == 1 && orientation != 1) {
-                        orientation = 1;
-                        take_picture_button.startAnimation(rotateAnimation);
-                        take_picture_button.setTag(orientation);
-                    } else if (msg.arg1 == 2 && orientation != 2) {
-                        orientation = 2;
-                        take_picture_button.startAnimation(rotateAnimation);
-                        take_picture_button.setTag(orientation);
-                    }
-
-
-                    break;
-            }
-        }
-    };
-
-    private int[] getButtonRotationDegree(int prev_orientation, int current_orientation){
+    private int[] getButtonRotationDegree(int prev_orientation, int current_orientation) {
         int[] degrees = new int[2];
-        switch(prev_orientation){
+        switch (prev_orientation) {
             case 0:
                 degrees[0] = 0;
                 break;
@@ -389,7 +371,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
                 degrees[0] = -90;
                 break;
         }
-        switch(current_orientation){
+        switch (current_orientation) {
             case 0:
                 degrees[1] = 0;
                 break;
