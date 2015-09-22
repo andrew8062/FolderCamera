@@ -164,7 +164,19 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
 
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        setImmersiveMode();
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+        orientationChangeDetector.unregister();
+    }
     private void setup_custom_dialog(){
         customDialog = new CustomDialog(MainActivity.this, pictureSave);
         customDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -207,19 +219,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume");
-        setImmersiveMode();
-    }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause");
-        orientationChangeDetector.unregister();
-    }
 
 
 
@@ -358,33 +358,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         return Math.sqrt(x * x + y * y);
     }
 
-    private int[] getButtonRotationDegree(int prev_orientation, int current_orientation) {
-        int[] degrees = new int[2];
-        switch (prev_orientation) {
-            case 0:
-                degrees[0] = 0;
-                break;
-            case 1:
-                degrees[0] = 90;
-                break;
-            case 2:
-                degrees[0] = -90;
-                break;
-        }
-        switch (current_orientation) {
-            case 0:
-                degrees[1] = 0;
-                break;
-            case 1:
-                degrees[1] = 90;
-                break;
-            case 2:
-                degrees[1] = -90;
-                break;
 
-        }
-        return degrees;
-    }
 
 }
 

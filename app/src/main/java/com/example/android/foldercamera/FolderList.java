@@ -35,12 +35,6 @@ public class FolderList {
         return folderArrayList.get(index).getPath();
     }
 
-    public String serialize() {
-        Gson gson = new Gson();
-        return gson.toJson(folderArrayList, new TypeToken<ArrayList<Folder>>() {
-        }.getType());
-    }
-
     public ArrayList<Folder> deserialize(String json) {
         Gson gson = new Gson();
         return gson.fromJson(json, new TypeToken<ArrayList<Folder>>() {}.getType());
