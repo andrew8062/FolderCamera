@@ -99,7 +99,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
                                                    public void onClick(View v) {
 
                                                        //自動對焦
-                                                       camera.autoFocus(afcb);
+                                                       camera.autoFocus(afcb_take_picture);
                                                    }
                                                }
 
@@ -241,16 +241,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         int action = event.getAction();
         Log.d(TAG, "pointer count: " + event.getPointerCount());
         if (action == MotionEvent.ACTION_DOWN){
-            camera.cancelAutoFocus();
-            Rect focusRect = calculateTapArea(event.getX(), event.getY(), 1f);
-            Rect meteringRect = calculateTapArea(event.getX(), event.getY(), 1.5f);
-
-            parameters = camera.getParameters();
-            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-
-
-            parameters.setFocusAreas(Lists.newArrayList(new Camera.Area(meteringRect, 1000)));
-            camera.setParameters(parameters);
             camera.autoFocus(afcb);
 
         }
@@ -267,27 +257,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         return true;
     }
 
-    private Rect calculateTapArea (float x, float y, float cofficient){
-        int areaSize = Float.valueOf(210 * cofficient).intValue();
-
-
-
-        int left = clamp((int) x - areaSize / 2, 0, surfaceView.getWidth() - areaSize);
-        int top = clamp((int) y - areaSize / 2, 0, surfaceView.getHeight() - areaSize);
-
-        RectF rectF = new RectF(left, top, left+areaSize, top+areaSize);
-        Matrix matrix = new Matrix();
-        matrix.mapRect(rectF);
-        return new Rect(Math.round(rectF.left), Math.round(rectF.top), Math.round(rectF.right), Math.round(rectF.bottom));
-    }
-
-    private int clamp(int x, int min, int max){
-        if(x > max)
-            return max;
-        if(x < min)
-            return min;
-        return x;
-    }
     //calculate the distance between two fingers
     private double getFingerSpacing(MotionEvent event) {
         float x = event.getX(0) - event.getX(1);
@@ -311,15 +280,21 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
 
     //自動對焦監聽式
-    Camera.AutoFocusCallback afcb = new Camera.AutoFocusCallback() {
+    Camera.AutoFocusCallback afcb_take_picture = new Camera.AutoFocusCallback() {
 
         public void onAutoFocus(boolean success, Camera camera) {
 
             if (success) {
                 //對焦成功才拍照
                 camera.takePicture(null, null, jpeg);
-
             }
+        }
+    };
+
+    Camera.AutoFocusCallback afcb = new Camera.AutoFocusCallback() {
+        @Override
+        public void onAutoFocus(boolean success, Camera camera) {
+
         }
     };
 
