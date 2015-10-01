@@ -46,7 +46,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
     PictureSave pictureSave;
     int currentZoomLevel;
     double finger_distance = 0;
-
+    boolean previewRunning = false;
     //camrea
     private Camera camera;
     private Camera.Parameters parameters;
@@ -110,6 +110,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         super.onResume();
         Log.d(TAG, "onResume");
         setImmersiveMode();
+        camera.startPreview();
     }
 
     @Override
@@ -270,6 +271,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         camera.release();
         //
     }
+
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {

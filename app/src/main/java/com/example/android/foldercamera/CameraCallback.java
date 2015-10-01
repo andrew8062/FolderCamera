@@ -26,6 +26,7 @@ public  class CameraCallback {
             pictureSave.save(data);
             camera.startPreview();
 
+
         }
 
     };
