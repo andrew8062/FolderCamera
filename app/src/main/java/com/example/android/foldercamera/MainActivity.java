@@ -46,76 +46,18 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
     PictureSave pictureSave;
     int currentZoomLevel;
     double finger_distance = 0;
-    PictureCallback jpeg = new PictureCallback() {
 
-        public void onPictureTaken(byte[] data, Camera camera) {
-//            Bitmap bmp = pictureSave.save(data);
-//            imageView1.setImageBitmap(bmp);
-            //需要手動重新startPreview，否則停在拍下的瞬間
-
-
-            pictureSave.save(data);
-            camera.startPreview();
-
-        }
-
-    };
-    Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-//            switch (msg.what) {
-//                case ORIENTAION_CHANGE:
-//                    int[] degrees = getButtonRotationDegree((int)take_picture_button.getTag(), msg.arg1);
-//                    RotateAnimation rotateAnimation = new RotateAnimation(degrees[0], degrees[1], Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
-//                            0.5f);
-//                    rotateAnimation.setDuration(300);
-//                    rotateAnimation.setFillAfter(true);
-////                    rotateAnimation.setFillEnabled(true);
-//                    if (msg.arg1 !=  orientation) {
-//                        orientation = msg.arg1;
-//                        take_picture_button.startAnimation(rotateAnimation);
-//                        take_picture_button.setTag(orientation);
-//                    }
-//                    break;
-//            }
-        }
-    };
+    //camrea
     private Camera camera;
     private Camera.Parameters parameters;
-    private Camera.CameraInfo info;
-    //自動對焦監聽式
-    Camera.AutoFocusCallback afcb = new Camera.AutoFocusCallback() {
+    private CameraCallback cameraCallback;
 
-        public void onAutoFocus(boolean success, Camera camera) {
-
-            if (success) {
-                //對焦成功才拍照
-                int orientation = orientationChangeDetector.getOrientation();
-                switch(orientation){
-                    case 0:
-                        orientation = 90;
-                        break;
-                    case 1:
-                        orientation = 0;
-                        break;
-                    case 2:
-                        orientation = 180;
-                        break;
-                }
-                Camera.Parameters params = camera.getParameters();
-                params.setRotation(orientation);
-                camera.setParameters(params);
-                camera.takePicture(null, null, jpeg);
-
-            }
-        }
-    };
+    //surface view
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
     private Button take_picture_button;
-    //image view for review
+    //UI elements
     private ImageView imageView1;
-    private int orientation = -1;
     private CircleButton fam;
     private View.OnClickListener famOnClickListener = new View.OnClickListener() {
         @Override
@@ -134,9 +76,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
             customDialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
             ;
         }
-
-
     };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,9 +90,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         setPictureSize();
         setup_custom_dialog();
         setup_tack_picture_button();
-        orientationChangeDetector = new OrientationChangeDetector(this, mHandler);
+        orientationChangeDetector = new OrientationChangeDetector(this);
         pictureSave = new PictureSave();
-
+        cameraCallback = new CameraCallback(pictureSave, orientationChangeDetector);
         surfaceView = (SurfaceView)
                 findViewById(R.id.surfaceView);
 
@@ -193,7 +134,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
                                                    public void onClick(View v) {
                                                        //自動對焦
-                                                       camera.autoFocus(afcb);
+                                                       camera.autoFocus(cameraCallback.autoFocusCallback_with_takePicture);
                                                    }
                                                }
 
@@ -335,9 +276,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
         int action = event.getAction();
         Log.d(TAG, "pointer count: " + event.getPointerCount());
-//        if (action == MotionEvent.ACTION_DOWN) {
-//            camera.autoFocus(afcb);
-//        }
+        if (action == MotionEvent.ACTION_DOWN) {
+            camera.autoFocus(cameraCallback.autoFocusCallback_without_takePicture);
+        }
         if (event.getPointerCount() > 1) {
             if (action == MotionEvent.ACTION_POINTER_DOWN) {
                 finger_distance = getFingerSpacing(event);
