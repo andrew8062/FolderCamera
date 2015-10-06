@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference android:key="apply_fly"
+        android:summary="禁用所有无线连接" android:title="飞行模式">
+    </CheckBoxPreference>
+    <Preference android:title="Choose Default Directory Path" android:key="directoryPicker"/>
+
+    <ListPreference
+        android:key="defaultSize"
+        android:title="Picture Resolution"
+        android:dialogTitle="set the picture resolution"
+        android:summary="set the picture resolution"
+        />
+
+
+</PreferenceScreen>

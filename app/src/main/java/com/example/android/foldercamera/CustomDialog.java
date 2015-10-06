@@ -3,6 +3,7 @@ package com.example.android.foldercamera;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
@@ -41,6 +42,16 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
     private SharedPreferences settings;
     private ArrayList<String> folderNameList;
     private PictureSave mPictureSave;
+    private Button btn_setting;
+
+    private View.OnClickListener btnSettingsClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent(mActivity, Settings.class);
+            mActivity.startActivity(intent);
+        }
+    };
+
 
     public CustomDialog(Activity activity, PictureSave pictureSave) {
         super(activity);
@@ -55,6 +66,9 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.custom_dialog);
+        btn_setting = (Button)findViewById(R.id.button_settings);
+
+        btn_setting.setOnClickListener(btnSettingsClickListener);
 
         listview = (ListView) findViewById(R.id.dialog_listview);
         editText = (EditText) findViewById(R.id.dialog_edittext);

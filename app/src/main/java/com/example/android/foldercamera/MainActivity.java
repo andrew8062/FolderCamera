@@ -2,6 +2,7 @@ package com.example.android.foldercamera;
 
 import android.app.Activity;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
@@ -80,15 +81,18 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
     };
 
 
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        camera = Camera.open();
+        //camera = Camera.open();
         fam = (CircleButton) findViewById(R.id.float_button);
+
         fam.setOnClickListener(famOnClickListener);
-        setPictureSize();
         setup_custom_dialog();
         setup_tack_picture_button();
         orientationChangeDetector = new OrientationChangeDetector(this);
@@ -112,7 +116,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         super.onResume();
         Log.d(TAG, "onResume");
         setImmersiveMode();
-        camera.startPreview();
     }
 
     @Override
@@ -233,7 +236,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
     public void surfaceCreated(SurfaceHolder holder) {
 
-        //camera = Camera.open();
+        camera = Camera.open();
+        setPictureSize();
         parameters = camera.getParameters();
         try {
 
@@ -269,8 +273,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
     public void surfaceDestroyed(SurfaceHolder holder) {
 
         System.out.println("surfaceDestroyed");
+
         camera.stopPreview();
         //關閉預覽
+
         camera.release();
         //
     }

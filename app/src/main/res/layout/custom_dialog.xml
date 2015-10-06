@@ -15,21 +15,30 @@
 
     <EditText
         android:id="@+id/dialog_edittext"
-        android:layout_width="200dp"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:hint="新增項目"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_toLeftOf="@+id/dialog_button"
-        android:layout_toStartOf="@+id/dialog_button" />
+      />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New Button"
+        android:text="Add new catagory"
         android:id="@+id/dialog_button"
         android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/dialog_edittext"
+        android:layout_toLeftOf="@+id/button_settings"
+         />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Setting"
+        android:id="@+id/button_settings"
+        android:layout_alignTop="@+id/dialog_edittext"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 
