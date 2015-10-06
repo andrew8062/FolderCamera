@@ -6,6 +6,10 @@ import android.hardware.Camera;
  * Created by Andrew on 10/2/2015.
  */
 public  class CameraCallback {
+
+    private final int ROTATION_HEAD_TO_LEFT = 0;
+    private final int ROTATION_PROTRAIT = 90;
+    private final int ROTATION_HEAD_TO_RIGHT = 180;
     OrientationChangeDetector mOrientationChangeDetector;
     PictureSave pictureSave;
 
@@ -47,21 +51,20 @@ public  class CameraCallback {
                 //對焦成功才拍照
                 int orientation = mOrientationChangeDetector.getOrientation();
                 switch(orientation){
-                    case 0:
-                        orientation = 90;
+                    case OrientationChangeDetector.HEAD_PORTRIAT:
+                        orientation = ROTATION_PROTRAIT;
                         break;
-                    case 1:
-                        orientation = 0;
+                    case OrientationChangeDetector.HEAD_TO_LEFT:
+                        orientation = ROTATION_HEAD_TO_LEFT;
                         break;
-                    case 2:
-                        orientation = 180;
+                    case OrientationChangeDetector.HEAD_TO_RIGHT:
+                        orientation = ROTATION_HEAD_TO_RIGHT;
                         break;
                 }
                 Camera.Parameters params = camera.getParameters();
                 params.setRotation(orientation);
                 camera.setParameters(params);
                 camera.takePicture(null, null, jpeg);
-
             }
         }
     };

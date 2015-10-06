@@ -40,6 +40,7 @@ import at.markushi.ui.CircleButton;
 public class MainActivity extends Activity implements SurfaceHolder.Callback {
     public static final String SHARED_PREFERENCE_KEY = "shared_preference";
     public static final int ORIENTAION_CHANGE = 1;
+    private static final int CAMERA_CONTROL_VALUE = 3;
     private static final String TAG = "fc";
     CustomDialog customDialog;
     OrientationChangeDetector orientationChangeDetector;
@@ -105,6 +106,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
 
     }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -119,7 +121,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         Log.d(TAG, "onPause");
         orientationChangeDetector.unregister();
     }
-    private void setup_custom_dialog(){
+
+    private void setup_custom_dialog() {
         customDialog = new CustomDialog(MainActivity.this, pictureSave);
         customDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
@@ -128,6 +131,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
             }
         });
     }
+
     private void setup_tack_picture_button() {
         take_picture_button = (Button) findViewById(R.id.button1);
         take_picture_button.setTag(0);
@@ -141,6 +145,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
         );
     }
+
     private void setPictureSize() {
         parameters = camera.getParameters();
         PictureSize pictureSave = new PictureSize(parameters);
@@ -149,6 +154,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         camera.setParameters(parameters);
 
     }
+
     private void setImmersiveMode() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
@@ -160,9 +166,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
     }
-
-
-
 
 
     private void setupZoomControl() {
@@ -201,10 +204,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
                 int MAX_ZOOM = parameter.getMaxZoom();
                 int currentZoom = parameter.getZoom();
                 if (zoomInOrOut && (currentZoom < MAX_ZOOM && currentZoom >= 0)) {
-                    currentZoom = currentZoom + 3;
+                    currentZoom = currentZoom + CAMERA_CONTROL_VALUE;
                     parameter.setZoom(currentZoom);
                 } else if (!zoomInOrOut && (currentZoom <= MAX_ZOOM && currentZoom > 0)) {
-                    currentZoom = currentZoom - 3;
+                    currentZoom = currentZoom - CAMERA_CONTROL_VALUE;
                     parameter.setZoom(currentZoom);
                 }
             } else
@@ -300,7 +303,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         float y = event.getY(0) - event.getY(1);
         return Math.sqrt(x * x + y * y);
     }
-
 
 
 }

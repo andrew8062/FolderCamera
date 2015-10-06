@@ -13,24 +13,28 @@ import android.util.Log;
  */
 public class OrientationChangeDetector {
     private static final String TAG = "fc:orientationChange";
+    private final double ORIENTATION_THRESHOLD = 6.5;
+    public static final int HEAD_TO_LEFT = 1;
+    public static final int HEAD_PORTRIAT = 0;
+    public static final int HEAD_TO_RIGHT = 2;
     int orientation = -1;
     SensorManager sensorManager;
     private Context mContext;
     SensorEventListener sensorEventListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
-            if (event.values[1] < 6.5 && event.values[1] > -6.5) {
+            if (event.values[1] < ORIENTATION_THRESHOLD && event.values[1] > -ORIENTATION_THRESHOLD) {
                 if (orientation != 1 && event.values[0] > 0) {
                     Log.d(TAG, "Landscape head to left");
-                    orientation = 1;
+                    orientation = HEAD_TO_LEFT;
                 } else if (orientation != 2 && event.values[0] < 0) {
                     Log.d(TAG, "Landscape head to right");
-                    orientation = 2;
+                    orientation = HEAD_TO_RIGHT;
                 }
             } else {
                 if (orientation != 0) {
                     Log.d(TAG, "Portrait");
-                    orientation = 0;
+                    orientation = HEAD_PORTRIAT;
                 }
 
             }
