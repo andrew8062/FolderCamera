@@ -48,6 +48,7 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(mActivity, Settings.class);
+
             mActivity.startActivity(intent);
         }
     };
@@ -76,7 +77,7 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
 
         button.setOnClickListener(this);
 
-        folderList = new FolderList();
+        folderList = new FolderList(getContext());
         folderNameList = new ArrayList<String>();
         settings = mActivity.getSharedPreferences(MainActivity.SHARED_PREFERENCE_KEY, 0);
 

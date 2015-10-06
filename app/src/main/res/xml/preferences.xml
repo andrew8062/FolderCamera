@@ -3,7 +3,7 @@
     <CheckBoxPreference android:key="apply_fly"
         android:summary="禁用所有无线连接" android:title="飞行模式">
     </CheckBoxPreference>
-    <Preference android:title="Choose Default Directory Path" android:key="directoryPicker"/>
+    <Preference android:title="Choose Default Directory Path" android:key="@string/pref_default_directory"/>
 
     <ListPreference
         android:key="defaultSize"

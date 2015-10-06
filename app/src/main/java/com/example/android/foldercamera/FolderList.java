@@ -1,7 +1,9 @@
 package com.example.android.foldercamera;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -13,9 +15,9 @@ import java.util.ArrayList;
  */
 public class FolderList {
     ArrayList<Folder> folderArrayList = new ArrayList<Folder>();
-
-    public FolderList() {
-
+    private Context mContext;
+    public FolderList(Context context) {
+        mContext = context;
     }
 
     public void add(String name, String path) {
@@ -53,8 +55,10 @@ public class FolderList {
             String json = settings.getString(key, "");
             folderArrayList = deserialize(json);
         } else {
-            Folder folder = new Folder("default", Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DCIM).toString());
+            SharedPreferences preference = PreferenceManager.getDefaultSharedPreferences(mContext);
+            String defaultDIrectoryPath = preference.getString(mContext.getString(R.string.pref_default_directory), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString());
+
+            Folder folder = new Folder("default\n("+defaultDIrectoryPath+")", defaultDIrectoryPath);
             folderArrayList.add(folder);
         }
     }

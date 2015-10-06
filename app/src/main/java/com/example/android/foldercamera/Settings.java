@@ -43,7 +43,7 @@ public class Settings extends PreferenceActivity {
     }
 
     private void setupDirectoryPickerPreference(){
-        directoryPicker = findPreference("directoryPicker");
+        directoryPicker = findPreference(getResources().getString(R.string.pref_default_directory));
 
         String path = preferences.getString(directoryPicker.getKey(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString());
         directoryPicker.setSummary(path);

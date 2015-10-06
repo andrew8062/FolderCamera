@@ -4,9 +4,14 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
+import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Rect;
+import android.os.Environment;
 import android.os.Handler;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -32,7 +37,6 @@ public class CustomAdapter extends BaseAdapter {
     private FolderList mObject;
     private int mResource;
     private Context mContext;
-    private PictureSave mPictureSave;
     private Handler mHandler;
 
     public CustomAdapter(Context context, int resource, FolderList objects, Handler handler) {
@@ -61,6 +65,7 @@ public class CustomAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+
         FolderList.Folder folder = getItem(position);
 
         if (convertView == null)
@@ -77,7 +82,7 @@ public class CustomAdapter extends BaseAdapter {
         tv.setTextColor(mContext.getResources().getColor((R.color.text_primary)));
         tv.setOnTouchListener(onTouchListener);
         tv.setText(folder.getName());
-        if(folder.getName().equals("default"))
+        if (folder.getName().equals("default"))
             bt.setVisibility(View.GONE);
         return convertView;
     }
