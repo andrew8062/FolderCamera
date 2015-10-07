@@ -87,7 +87,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
         fam.setOnClickListener(famOnClickListener);
         orientationChangeDetector = new OrientationChangeDetector(this);
-        pictureSave = new PictureSave();
+        pictureSave = new PictureSave(getApplicationContext());
         cameraCallback = new CameraCallback(pictureSave, orientationChangeDetector);
         surfaceView = (SurfaceView)
                 findViewById(R.id.surfaceView);

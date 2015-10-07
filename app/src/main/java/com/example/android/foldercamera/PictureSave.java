@@ -1,5 +1,6 @@
 package com.example.android.foldercamera;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
@@ -19,8 +20,8 @@ public  class PictureSave {
     private static final String TAG = "fc:pictureSave";
     private String path;
     private String folderName;
-    public PictureSave(){
-        path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString();
+    public PictureSave(Context mContext){
+        path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString()+"\\"+mContext.getResources().getString(R.string.default_picture_direcory);
     }
     public PictureSave(String path){
         this.path = path;
