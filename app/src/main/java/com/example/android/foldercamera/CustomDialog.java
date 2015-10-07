@@ -3,12 +3,14 @@ package com.example.android.foldercamera;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 public class CustomDialog extends Dialog implements View.OnClickListener {
     public static final int DIALOG_LISTVIEW_SELECT = 1;
     public static final int DIALOG_DELETE_BUTTON = 2;
+    private static final int CODE_SETTING_INTENT=3;
 
     private final String SHARED_PREFERENCE_FOLDER_LIST = "fc:folderdialog";
     private final String DCIM_PATH = Environment.getExternalStoragePublicDirectory(
@@ -40,7 +43,7 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
 
     private FolderList folderList;
     private CustomAdapter mAdapter;
-    private SharedPreferences settings;
+    private SharedPreferences sharedPreferences;
     private ArrayList<String> folderNameList;
     private PictureSave mPictureSave;
     private ImageButton btn_setting;
@@ -50,7 +53,7 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
         public void onClick(View v) {
             Intent intent = new Intent(mActivity, Settings.class);
 
-            mActivity.startActivity(intent);
+            mActivity.startActivityForResult(intent, CODE_SETTING_INTENT);
         }
     };
 
@@ -80,14 +83,14 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
 
         folderList = new FolderList(getContext());
         folderNameList = new ArrayList<String>();
-        settings = mActivity.getSharedPreferences(MainActivity.SHARED_PREFERENCE_KEY, 0);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mActivity);
 
         setTitle("選擇項目");
         setupListView();
     }
 
     private void setupListView() {
-        folderList.getFolderList(settings, SHARED_PREFERENCE_FOLDER_LIST);
+        folderList.getFolderList(sharedPreferences, mActivity.getResources().getString(R.string.pref_folder_list));
         folderNameList = folderList.getFolderNameList();
         mAdapter = new CustomAdapter(mActivity, android.R.layout.select_dialog_singlechoice, folderList, handler);
         listview.setAdapter(mAdapter);
@@ -102,6 +105,7 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
 //        });
     }
 
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -111,7 +115,7 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
                     String folderName = editText.getText().toString();
                     String folderPath = DCIM_PATH + "/" + folderName;
                     folderList.add(folderName, folderPath);
-                    folderList.saveToSharedPreference(settings, SHARED_PREFERENCE_FOLDER_LIST);
+                    folderList.saveToSharedPreference(sharedPreferences, mActivity.getResources().getString(R.string.pref_folder_list));
                     folderNameList = folderList.getFolderNameList();
                     mPictureSave.setFolderNameAndPath(folderName, folderPath);
                     mAdapter.changeData(folderList);

@@ -3,6 +3,7 @@ package com.example.android.foldercamera;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
@@ -13,6 +14,10 @@ import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.ListPreference;
+import android.preference.Preference;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -39,7 +44,6 @@ import at.markushi.ui.CircleButton;
 
 
 public class MainActivity extends Activity implements SurfaceHolder.Callback {
-    public static final String SHARED_PREFERENCE_KEY = "shared_preference";
     public static final int ORIENTAION_CHANGE = 1;
     private static final int CAMERA_CONTROL_VALUE = 3;
     private static final String TAG = "fc";
@@ -65,18 +69,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         @Override
         public void onClick(View v) {
             Log.d(TAG, "famisclicked");
-            //folderDialog.showDialog()
-            // //Here's the magic..
-            //Set the dialog to not focusable (makes navigation ignore us adding the window)
-            customDialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
-            //Show the dialog!
-            customDialog.show();
-            //Set the dialog to immersive
-            customDialog.getWindow().getDecorView().setSystemUiVisibility(
-                    getWindow().getDecorView().getSystemUiVisibility());
-            //Clear the not focusable flag from the window
-            customDialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
-            ;
+           setCustomDialog();
         }
     };
 
@@ -110,7 +103,26 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
 
     }
+    private void setCustomDialog(){
 
+        customDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                setPictureSize();
+            }
+        });
+        // //Here's the magic..
+        //Set the dialog to not focusable (makes navigation ignore us adding the window)
+        customDialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+        //Show the dialog!
+        customDialog.show();
+        //Set the dialog to immersive
+        customDialog.getWindow().getDecorView().setSystemUiVisibility(
+                getWindow().getDecorView().getSystemUiVisibility());
+        //Clear the not focusable flag from the window
+        customDialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+        ;
+    }
     @Override
     protected void onResume() {
         super.onResume();
@@ -150,9 +162,14 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
     }
 
     private void setPictureSize() {
+        //get resolution from shared preference
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String str_resolution = sharedPreferences.getString(getResources().getString(R.string.pref_resolution_key), getResources().getString(R.string.resolution_large));
+        int resolution = Integer.parseInt(str_resolution);
+
         parameters = camera.getParameters();
-        PictureSize pictureSave = new PictureSize(parameters);
-        Camera.Size size = pictureSave.getResolution(PictureSize.LARGE_SIZE);
+        PictureSize pictureSave = new PictureSize(parameters, camera.new Size(0,0));
+        Camera.Size size = pictureSave.getResolution(resolution);
         parameters.setPictureSize(size.width, size.height);
         camera.setParameters(parameters);
 

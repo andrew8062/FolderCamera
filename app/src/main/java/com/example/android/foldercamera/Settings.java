@@ -30,15 +30,16 @@ public class Settings extends PreferenceActivity {
     ListPreference listPreference;
     Preference directoryPicker;
     SharedPreferences preferences;
-
+    Intent return_data = new Intent();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
         preferences =  getPreferenceManager().getDefaultSharedPreferences(this);
-        listPreference = (ListPreference) findPreference("defaultSize");
-        setupListPreference();
+        listPreference = (ListPreference) findPreference(getResources().getString(R.string.pref_resolution_key));
+       // setupListPreference();
         setupDirectoryPickerPreference();
+        setResult(Activity.RESULT_CANCELED);
 
     }
 
@@ -58,22 +59,14 @@ public class Settings extends PreferenceActivity {
         });
 
     }
-    private void setupListPreference() {
-        if (listPreference != null) {
-            CharSequence entries[] = new String[5];
-            CharSequence entryValues[] = new String[5];
-
-            for (int i = 0; i < 5; i++) {
-                entries[i] = Integer.toString(i);
-                entryValues[i] = Integer.toString(i);
-
+   SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener(){
+       @Override
+       public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            if (key.equals(listPreference.getKey())){
+                setResult(Activity.RESULT_OK);
             }
-            listPreference.setEntries(entries);
-            listPreference.setEntryValues(entryValues);
-
-        }
-    }
-
+       }
+   };
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CODE_DIRETORY_PICKER && resultCode == Activity.RESULT_OK) {

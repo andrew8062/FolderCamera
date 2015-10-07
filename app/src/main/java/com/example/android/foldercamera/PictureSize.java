@@ -15,16 +15,17 @@ public class PictureSize {
     public static final int SMALL_SIZE = 3;
 
     List<Camera.Size> sizes;
+    Camera.Size size;
 
-    public PictureSize(android.hardware.Camera.Parameters params) {
+    public PictureSize(android.hardware.Camera.Parameters params, Camera.Size size) {
         sizes = params.getSupportedPictureSizes();
+        this.size = size;
         // Iterate through all available resolutions and choose one.
         // The chosen resolution will be store  d in mSize.
-        android.hardware.Camera.Size mSize;
-        for (Camera.Size size : sizes) {
-            Log.d(TAG, "Available resolution: " + size.width + " " + size.height);
-            mSize = size;
+        for (Camera.Size s : sizes) {
+            Log.d(TAG, "Available resolution: " + s.width + " " + s.height);
         }
+
     }
     public Camera.Size getSize(int idx){
         return sizes.get(idx);
@@ -38,10 +39,10 @@ public class PictureSize {
             resolution = 8e6;
         else if(size_class == SMALL_SIZE)
             resolution = 3.1e6;
-        Camera.Size size = null;
         for (Camera.Size s : sizes) {
             Log.d(TAG, "Available resolution: " + s.width + " " + s.height);
             if(s.width*s.height < resolution){
+
                 size.width = s.width;
                 size.height = s.height;
             }

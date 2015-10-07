@@ -5,4 +5,20 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_settings">Settings</string>
     <string name="pref_default_directory">defaultDirectory</string>
+    <string name="pref_resolution_key">resolution</string>
+    <string name="pref_folder_list">folder_list</string>
+    <string-array name="pref_resolution_options">
+        <item>(4:3) 13.0M pixel</item>
+        <item>(4:3) 8.0M pixel</item>
+        <item>(4:3) 1.3M pixel</item>
+    </string-array>
+    <string-array name="resolution_value">
+        <item>@string/resolution_large</item>
+        <item>@string/resolution_medium</item>
+        <item>@string/resolution_small</item>
+    </string-array>
+    <string name="resolution_large">1</string>
+    <string name="resolution_medium">2</string>
+    <string name="resolution_small">3</string>
+
 </resources>
