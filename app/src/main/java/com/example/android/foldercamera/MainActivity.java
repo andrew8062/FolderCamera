@@ -93,8 +93,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         fam = (CircleButton) findViewById(R.id.float_button);
 
         fam.setOnClickListener(famOnClickListener);
-        setup_custom_dialog();
-        setup_tack_picture_button();
         orientationChangeDetector = new OrientationChangeDetector(this);
         pictureSave = new PictureSave();
         cameraCallback = new CameraCallback(pictureSave, orientationChangeDetector);
@@ -107,6 +105,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         surfaceHolder.addCallback(this);
+        setup_custom_dialog();
+        setup_tack_picture_button();
 
 
     }
@@ -152,7 +152,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
     private void setPictureSize() {
         parameters = camera.getParameters();
         PictureSize pictureSave = new PictureSize(parameters);
-        Camera.Size size = pictureSave.getSize(0);
+        Camera.Size size = pictureSave.getResolution(PictureSize.LARGE_SIZE);
         parameters.setPictureSize(size.width, size.height);
         camera.setParameters(parameters);
 

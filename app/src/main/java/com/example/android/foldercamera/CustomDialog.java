@@ -14,6 +14,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -34,7 +35,7 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
 
     private Activity mActivity;
     private ListView listview;
-    private Button button;
+    private ImageButton button;
     private EditText editText;
 
     private FolderList folderList;
@@ -42,7 +43,7 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
     private SharedPreferences settings;
     private ArrayList<String> folderNameList;
     private PictureSave mPictureSave;
-    private Button btn_setting;
+    private ImageButton btn_setting;
 
     private View.OnClickListener btnSettingsClickListener = new View.OnClickListener() {
         @Override
@@ -67,13 +68,13 @@ public class CustomDialog extends Dialog implements View.OnClickListener {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.custom_dialog);
-        btn_setting = (Button)findViewById(R.id.button_settings);
+        btn_setting = (ImageButton)findViewById(R.id.button_settings);
 
         btn_setting.setOnClickListener(btnSettingsClickListener);
 
         listview = (ListView) findViewById(R.id.dialog_listview);
         editText = (EditText) findViewById(R.id.dialog_edittext);
-        button = (Button) findViewById(R.id.dialog_button);
+        button = (ImageButton) findViewById(R.id.dialog_button);
 
         button.setOnClickListener(this);
 

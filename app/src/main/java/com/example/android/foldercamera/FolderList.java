@@ -58,7 +58,7 @@ public class FolderList {
             SharedPreferences preference = PreferenceManager.getDefaultSharedPreferences(mContext);
             String defaultDIrectoryPath = preference.getString(mContext.getString(R.string.pref_default_directory), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString());
 
-            Folder folder = new Folder("default\n("+defaultDIrectoryPath+")", defaultDIrectoryPath);
+            Folder folder = new Folder("default", defaultDIrectoryPath);
             folderArrayList.add(folder);
         }
     }
