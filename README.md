@@ -1,5 +1,5 @@
 # FolderCamera
-Folder Camera is like a normal camera app but it has a floating action buttom which can quickly change the picture sotrage location.
+Folder Camera is like a normal camera app but it has a floating action button which can quickly change the picture storage location. 
 Allows the user can easily classify different pictures to different folders.
 
 <p>the main activity</p>
